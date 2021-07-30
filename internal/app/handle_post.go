@@ -17,7 +17,7 @@ func (s *server) handleCreatePost(w http.ResponseWriter, r *http.Request) {
 		Tags  []string `json:"tags"`
 	}
 
-	err := request.ReadJSON(r, &input)
+	err := request.ReadJSON(w, r, &input)
 	if err != nil {
 		response.BadRequestResponse(w, err)
 		return

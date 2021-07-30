@@ -8,7 +8,11 @@ import (
 	"net/http"
 )
 
-func ReadJSON(r *http.Request, dst interface{}) error {
+func ReadJSON(w http.ResponseWriter, r *http.Request, dst interface{}) error {
+	// Limit the size of the request body to 1MB
+	maxBytes := 1_038_576
+	r.Body = http.MaxBytesReader(w, r.Body, int64(maxBytes))
+
 	// decode the request body
 	err := json.NewDecoder(r.Body).Decode(dst)
 	// if there is an error during decoding:
@@ -44,9 +48,13 @@ func ReadJSON(r *http.Request, dst interface{}) error {
 		case errors.Is(err, io.EOF):
 			return errors.New("body must not be empty")
 
+		// If request body exceeds 1MB in size the decode will fail.
+		case err.Error() == "http: request body too large":
+			return fmt.Errorf("body must be larger than %d bytes", maxBytes)
+
 		// this will happen if we pass a non-nil pointer to Decode()
 		// we catch this and panic instead of returning the error
-		// bacause this error should not happen during normal operation
+		// because this error should not happen during normal operation
 		// and probably the result of a developer mistake
 		case errors.As(err, &invalidUnmarshalError):
 			panic(err)
