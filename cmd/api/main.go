@@ -9,7 +9,7 @@ import (
 )
 
 func main() {
-	h := app.NewHandler()
+	h := app.NewServer()
 
 	h.Run()
 

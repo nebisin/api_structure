@@ -1,24 +1,39 @@
 package app
 
 import (
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/nebisin/api_structure/internal/store"
+	"github.com/nebisin/api_structure/pkg/request"
 	"github.com/nebisin/api_structure/pkg/response"
 	"net/http"
 	"strconv"
 	"time"
 )
 
-func (h *handler) handleCreatePost(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "create a post\n")
+func (s *server) handleCreatePost(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		Title string   `json:"title"`
+		Body  string   `json:"body"`
+		Tags  []string `json:"tags"`
+	}
+
+	err := request.ReadJSON(r, &input)
+	if err != nil {
+		response.BadRequestResponse(w, err)
+		return
+	}
+
+	err = response.JSONResponse(w, http.StatusCreated, input)
+	if err != nil {
+		s.Logger.Println(err)
+		response.ServerErrorResponse(w)
+	}
 }
 
-func (h *handler) handleShowPost(w http.ResponseWriter, r *http.Request) {
+func (s *server) handleShowPost(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {
-		h.Logger.Println(err)
 		response.NotFoundResponse(w)
 		return
 	}
@@ -33,7 +48,7 @@ func (h *handler) handleShowPost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := response.JSONResponse(w, http.StatusOK, post); err != nil {
-		h.Logger.Println(err)
+		s.Logger.Println(err)
 		response.ServerErrorResponse(w)
 	}
 }

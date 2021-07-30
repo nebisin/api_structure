@@ -6,16 +6,16 @@ import (
 	"log"
 )
 
-type handler struct {
+type server struct {
 	DB     *sql.DB
 	Router *mux.Router
 	Logger *log.Logger
 }
 
-func NewHandler() *handler {
-	return &handler{}
+func NewServer() *server {
+	return &server{}
 }
 
-func (h *handler) Run() {
-	h.routes()
+func (s *server) Run() {
+	s.routes()
 }
