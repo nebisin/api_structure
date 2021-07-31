@@ -33,3 +33,13 @@ func MethodNotAllowedResponse(w http.ResponseWriter, r *http.Request) {
 func BadRequestResponse(w http.ResponseWriter, err error) {
 	ErrorResponse(w, http.StatusBadRequest, err.Error())
 }
+
+func FailedValidationResponse(w http.ResponseWriter, errs map[string]string) {
+	envelope := map[string]interface{}{
+		"errors": errs,
+	}
+	err := JSONResponse(w, http.StatusUnprocessableEntity, envelope)
+	if err != nil {
+		w.WriteHeader(500)
+	}
+}

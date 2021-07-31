@@ -1,4 +1,4 @@
-package request
+package utils
 
 import (
 	"encoding/json"
@@ -68,3 +68,4 @@ func ReadJSON(w http.ResponseWriter, r *http.Request, dst interface{}) error {
 
 	return nil
 }
+

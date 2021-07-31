@@ -3,8 +3,8 @@ package app
 import (
 	"github.com/gorilla/mux"
 	"github.com/nebisin/api_structure/internal/store"
-	"github.com/nebisin/api_structure/pkg/request"
 	"github.com/nebisin/api_structure/pkg/response"
+	"github.com/nebisin/api_structure/pkg/utils"
 	"net/http"
 	"strconv"
 	"time"
@@ -12,19 +12,23 @@ import (
 
 func (s *server) handleCreatePost(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Title string   `json:"title"`
-		Body  string   `json:"body"`
-		Tags  []string `json:"tags"`
+		Title string   `json:"title" validate:"required"`
+		Body  string   `json:"body" validate:"required"`
+		Tags  []string `json:"tags,omitempty" validate:"unique"`
 	}
 
-	err := request.ReadJSON(w, r, &input)
-	if err != nil {
+
+	if err := utils.ReadJSON(w, r, &input); err != nil {
 		response.BadRequestResponse(w, err)
 		return
 	}
 
-	err = response.JSONResponse(w, http.StatusCreated, input)
-	if err != nil {
+	if err := utils.ValidateInput(&input); err != nil {
+		response.FailedValidationResponse(w, err)
+		return
+	}
+
+	if err := response.JSONResponse(w, http.StatusCreated, input); err != nil {
 		s.Logger.Println(err)
 		response.ServerErrorResponse(w)
 	}
