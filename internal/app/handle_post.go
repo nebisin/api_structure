@@ -4,7 +4,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/nebisin/api_structure/internal/store"
 	"github.com/nebisin/api_structure/pkg/response"
-	"github.com/nebisin/api_structure/pkg/utils"
+	"github.com/nebisin/api_structure/pkg/request"
 	"net/http"
 	"strconv"
 	"time"
@@ -18,12 +18,12 @@ func (s *server) handleCreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 
-	if err := utils.ReadJSON(w, r, &input); err != nil {
+	if err := request.ReadJSON(w, r, &input); err != nil {
 		response.BadRequestResponse(w, err)
 		return
 	}
 
-	if err := utils.ValidateInput(&input); err != nil {
+	if err := request.ValidateInput(&input); err != nil {
 		response.FailedValidationResponse(w, err)
 		return
 	}
