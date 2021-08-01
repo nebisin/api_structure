@@ -1,6 +1,13 @@
 package store
 
-import "time"
+import (
+	"errors"
+	"time"
+)
+
+var (
+	ErrRecordNotFound = errors.New("record not found")
+)
 
 type Post struct {
 	ID        int64     `json:"id"`

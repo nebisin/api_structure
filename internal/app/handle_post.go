@@ -17,7 +17,6 @@ func (s *server) handleCreatePost(w http.ResponseWriter, r *http.Request) {
 		Tags  []string `json:"tags,omitempty" validate:"unique"`
 	}
 
-
 	if err := utils.ReadJSON(w, r, &input); err != nil {
 		response.BadRequestResponse(w, err)
 		return
@@ -28,7 +27,16 @@ func (s *server) handleCreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := response.JSONResponse(w, http.StatusCreated, input); err != nil {
+	post := store.Post{
+		ID:        1,
+		CreatedAt: time.Now(),
+		Title:     input.Title,
+		Body:      input.Body,
+		Tags:      input.Tags,
+		Version:   1,
+	}
+
+	if err := response.JSONResponse(w, http.StatusCreated, post); err != nil {
 		s.Logger.Println(err)
 		response.ServerErrorResponse(w)
 	}
