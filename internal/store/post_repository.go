@@ -60,7 +60,7 @@ WHERE id = $1`
 
 func (r *postRepository) Update(post *Post) error {
 	query := `UPDATE posts SET title=$1, body=$2, tags=$3, version= version + 1
-WHERE id=$4
+WHERE id=$4 AND version = $5
 RETURNING version`
 
 	args := []interface{}{
@@ -68,9 +68,20 @@ RETURNING version`
 		post.Body,
 		pq.Array(post.Tags),
 		post.ID,
+		post.Version,
 	}
 
-	return r.DB.QueryRow(query, args...).Scan(&post.Version)
+	err := r.DB.QueryRow(query, args...).Scan(&post.Version)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			return ErrEditConflict
+		default:
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (r *postRepository) Delete(id int64) error {

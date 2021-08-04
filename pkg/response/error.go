@@ -43,3 +43,8 @@ func FailedValidationResponse(w http.ResponseWriter, errs map[string]string) {
 		w.WriteHeader(500)
 	}
 }
+
+func EditConflictResponse(w http.ResponseWriter) {
+	message := "unable to update the record due to an edit conflict, please try again"
+	ErrorResponse(w, http.StatusConflict, message)
+}

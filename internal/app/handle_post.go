@@ -95,9 +95,16 @@ func (s *server) handleUpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if r.Header.Get("X-Expected-Version") != "" {
+		if strconv.FormatInt(int64(post.Version), 32) != r.Header.Get("X-Expected-Version") {
+			response.EditConflictResponse(w)
+			return
+		}
+	}
+
 	var input struct{
-		Title string   `json:"title" validate:"required"`
-		Body  string   `json:"body" validate:"required"`
+		Title *string   `json:"title"`
+		Body  *string   `json:"body"`
 		Tags  []string `json:"tags,omitempty" validate:"unique"`
 	}
 
@@ -109,13 +116,25 @@ func (s *server) handleUpdatePost(w http.ResponseWriter, r *http.Request) {
 		response.FailedValidationResponse(w, err)
 		return
 	}
+	if input.Title != nil {
+		post.Title = *input.Title
+	}
 
-	post.Title = input.Title
-	post.Body = input.Body
-	post.Tags = input.Tags
+	if input.Body != nil {
+		post.Body = *input.Body
+	}
+
+	if input.Tags != nil {
+		post.Tags = input.Tags
+	}
 
 	if 	err := repo.Update(post); err != nil {
-		response.ServerErrorResponse(w)
+		switch {
+		case errors.Is(err, store.ErrEditConflict):
+			response.EditConflictResponse(w)
+		default:
+			response.ServerErrorResponse(w)
+		}
 		return
 	}
 
