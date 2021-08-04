@@ -1,9 +1,11 @@
 package store
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"github.com/lib/pq"
+	"time"
 )
 
 type postRepository struct {
@@ -23,7 +25,10 @@ RETURNING id, created_at, version`
 
 	args := []interface{}{post.Title, post.Body, pq.Array(post.Tags)}
 
-	return r.DB.QueryRow(query, args...).Scan(&post.ID, &post.CreatedAt, &post.Version)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	return r.DB.QueryRowContext(ctx, query, args...).Scan(&post.ID, &post.CreatedAt, &post.Version)
 }
 
 func (r *postRepository) Get(id int64) (*Post, error) {
@@ -37,7 +42,10 @@ WHERE id = $1`
 
 	var post Post
 
-	err := r.DB.QueryRow(query, id).Scan(
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := r.DB.QueryRowContext(ctx, query, id).Scan(
 		&post.ID,
 		&post.CreatedAt,
 		&post.Title,
@@ -71,7 +79,10 @@ RETURNING version`
 		post.Version,
 	}
 
-	err := r.DB.QueryRow(query, args...).Scan(&post.Version)
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	err := r.DB.QueryRowContext(ctx, query, args...).Scan(&post.Version)
 	if err != nil {
 		switch {
 		case errors.Is(err, sql.ErrNoRows):
@@ -87,8 +98,11 @@ RETURNING version`
 func (r *postRepository) Delete(id int64) error {
 	query := `DELETE FROM posts
 WHERE id = $1`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 	
-	result, err := r.DB.Exec(query, id)
+	result, err := r.DB.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
