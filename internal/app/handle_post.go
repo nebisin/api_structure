@@ -63,6 +63,7 @@ func (s *server) handleShowPost(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, store.ErrRecordNotFound):
 			response.NotFoundResponse(w)
 		default:
+			s.Logger.Println(err)
 			response.ServerErrorResponse(w)
 		}
 		return
@@ -90,6 +91,7 @@ func (s *server) handleUpdatePost(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, store.ErrRecordNotFound):
 			response.NotFoundResponse(w)
 		default:
+			s.Logger.Println(err)
 			response.ServerErrorResponse(w)
 		}
 		return
@@ -133,12 +135,14 @@ func (s *server) handleUpdatePost(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, store.ErrEditConflict):
 			response.EditConflictResponse(w)
 		default:
+			s.Logger.Println(err)
 			response.ServerErrorResponse(w)
 		}
 		return
 	}
 
 	if err := response.JSONResponse(w, http.StatusOK, post); err != nil {
+		s.Logger.Println(err)
 		response.ServerErrorResponse(w)
 	}
 }
@@ -158,6 +162,7 @@ func (s *server) handleDeletePost(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, store.ErrRecordNotFound):
 			response.NotFoundResponse(w)
 		default:
+			s.Logger.Println(err)
 			response.ServerErrorResponse(w)
 		}
 		return
@@ -165,6 +170,7 @@ func (s *server) handleDeletePost(w http.ResponseWriter, r *http.Request) {
 
 	err = response.JSONResponse(w, http.StatusOK, map[string]string{"message": "post successfully deleted"})
 	if err != nil {
+		s.Logger.Println(err)
 		response.ServerErrorResponse(w)
 	}
 }
