@@ -1,13 +1,13 @@
 package app
 
 import (
+	"errors"
 	"github.com/gorilla/mux"
 	"github.com/nebisin/api_structure/internal/store"
 	"github.com/nebisin/api_structure/pkg/request"
 	"github.com/nebisin/api_structure/pkg/response"
 	"net/http"
 	"strconv"
-	"time"
 )
 
 func (s *server) handleCreatePost(w http.ResponseWriter, r *http.Request) {
@@ -28,12 +28,17 @@ func (s *server) handleCreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	post := store.Post{
-		ID:        1,
-		CreatedAt: time.Now(),
 		Title:     input.Title,
 		Body:      input.Body,
 		Tags:      input.Tags,
-		Version:   1,
+	}
+
+	repo := store.NewPostRepository(s.DB)
+
+	err := repo.Insert(&post)
+	if err != nil {
+		response.ServerErrorResponse(w)
+		return
 	}
 
 	if err := response.JSONResponse(w, http.StatusCreated, post); err != nil {
@@ -50,17 +55,97 @@ func (s *server) handleShowPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	post := store.Post{
-		ID:        id,
-		CreatedAt: time.Now(),
-		Title:     "Developing Rest API with Golang",
-		Body:      "Lorem ipsum dolor sit amet.",
-		Tags:      []string{"golang", "rest", "api"},
-		Version:   1,
+	repo := store.NewPostRepository(s.DB)
+
+	post, err := repo.Get(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, store.ErrRecordNotFound):
+			response.NotFoundResponse(w)
+		default:
+			response.ServerErrorResponse(w)
+		}
+		return
 	}
 
 	if err := response.JSONResponse(w, http.StatusOK, post); err != nil {
 		s.Logger.Println(err)
+		response.ServerErrorResponse(w)
+	}
+}
+
+func (s *server) handleUpdatePost(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.ParseInt(vars["id"], 10, 64)
+	if err != nil {
+		response.NotFoundResponse(w)
+		return
+	}
+
+	repo := store.NewPostRepository(s.DB)
+
+	post, err := repo.Get(id)
+	if err != nil {
+		switch {
+		case errors.Is(err, store.ErrRecordNotFound):
+			response.NotFoundResponse(w)
+		default:
+			response.ServerErrorResponse(w)
+		}
+		return
+	}
+
+	var input struct{
+		Title string   `json:"title" validate:"required"`
+		Body  string   `json:"body" validate:"required"`
+		Tags  []string `json:"tags,omitempty" validate:"unique"`
+	}
+
+	if err = request.ReadJSON(w, r, &input); err != nil {
+		response.BadRequestResponse(w, err)
+	}
+
+	if err := request.ValidateInput(&input); err != nil {
+		response.FailedValidationResponse(w, err)
+		return
+	}
+
+	post.Title = input.Title
+	post.Body = input.Body
+	post.Tags = input.Tags
+
+	if 	err := repo.Update(post); err != nil {
+		response.ServerErrorResponse(w)
+		return
+	}
+
+	if err := response.JSONResponse(w, http.StatusOK, post); err != nil {
+		response.ServerErrorResponse(w)
+	}
+}
+
+func (s *server) handleDeletePost(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id, err := strconv.ParseInt(vars["id"], 10, 64)
+	if err != nil {
+		response.NotFoundResponse(w)
+		return
+	}
+
+	repo := store.NewPostRepository(s.DB)
+
+	if 	err := repo.Delete(id); err != nil {
+		switch {
+		case errors.Is(err, store.ErrRecordNotFound):
+			response.NotFoundResponse(w)
+		default:
+			response.ServerErrorResponse(w)
+		}
+		return
+	}
+
+	err = response.JSONResponse(w, http.StatusOK, map[string]string{"message": "post successfully deleted"})
+	if err != nil {
 		response.ServerErrorResponse(w)
 	}
 }
