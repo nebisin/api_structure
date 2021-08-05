@@ -7,7 +7,7 @@ import (
 
 var (
 	ErrRecordNotFound = errors.New("record not found")
-	ErrEditConflict = errors.New("edit conflict")
+	ErrEditConflict   = errors.New("edit conflict")
 )
 
 type Post struct {
@@ -17,4 +17,10 @@ type Post struct {
 	Body      string    `json:"body"`
 	Tags      []string  `json:"tags,omitempty"`
 	Version   int32     `json:"version"`
+}
+
+type Filters struct {
+	Page     int    `validate:"gt=0" json:"page"`
+	PageSize int    `validate:"gt=0,lt=100" json:"page_size"`
+	Sort     string `json:"sort"`
 }

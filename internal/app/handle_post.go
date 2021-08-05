@@ -2,6 +2,7 @@ package app
 
 import (
 	"errors"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/nebisin/api_structure/internal/store"
 	"github.com/nebisin/api_structure/pkg/request"
@@ -28,9 +29,9 @@ func (s *server) handleCreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	post := store.Post{
-		Title:     input.Title,
-		Body:      input.Body,
-		Tags:      input.Tags,
+		Title: input.Title,
+		Body:  input.Body,
+		Tags:  input.Tags,
 	}
 
 	repo := store.NewPostRepository(s.DB)
@@ -104,9 +105,9 @@ func (s *server) handleUpdatePost(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	var input struct{
-		Title *string   `json:"title"`
-		Body  *string   `json:"body"`
+	var input struct {
+		Title *string  `json:"title"`
+		Body  *string  `json:"body"`
 		Tags  []string `json:"tags,omitempty" validate:"unique"`
 	}
 
@@ -130,7 +131,7 @@ func (s *server) handleUpdatePost(w http.ResponseWriter, r *http.Request) {
 		post.Tags = input.Tags
 	}
 
-	if 	err := repo.Update(post); err != nil {
+	if err := repo.Update(post); err != nil {
 		switch {
 		case errors.Is(err, store.ErrEditConflict):
 			response.EditConflictResponse(w)
@@ -157,7 +158,7 @@ func (s *server) handleDeletePost(w http.ResponseWriter, r *http.Request) {
 
 	repo := store.NewPostRepository(s.DB)
 
-	if 	err := repo.Delete(id); err != nil {
+	if err := repo.Delete(id); err != nil {
 		switch {
 		case errors.Is(err, store.ErrRecordNotFound):
 			response.NotFoundResponse(w)
@@ -173,4 +174,30 @@ func (s *server) handleDeletePost(w http.ResponseWriter, r *http.Request) {
 		s.Logger.Println(err)
 		response.ServerErrorResponse(w)
 	}
+}
+
+func (s *server) handleListPosts(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		Title    string
+		Tags     []string
+		store.Filters
+	}
+
+	qs := r.URL.Query()
+
+	input.Title = request.ReadString(qs, "title", "")
+	input.Tags = request.ReadCSV(qs, "tags", []string{})
+
+	input.Filters.Page = request.ReadInt(qs, "page", 1)
+	input.Filters.PageSize = request.ReadInt(qs, "page_size", 20)
+
+	input.Filters.Sort = request.ReadString(qs, "sort", "id")
+
+	errs := request.ValidateInput(input.Filters)
+	if errs != nil {
+		response.FailedValidationResponse(w, errs)
+		return
+	}
+
+	fmt.Fprintf(w, "%+v\n", input)
 }
