@@ -38,13 +38,12 @@ func (s *server) handleCreatePost(w http.ResponseWriter, r *http.Request) {
 
 	err := repo.Insert(&post)
 	if err != nil {
-		response.ServerErrorResponse(w)
+		response.ServerErrorResponse(w, s.Logger, err)
 		return
 	}
 
 	if err := response.JSONResponse(w, http.StatusCreated, post); err != nil {
-		s.Logger.Println(err)
-		response.ServerErrorResponse(w)
+		response.ServerErrorResponse(w, s.Logger, err)
 	}
 }
 
@@ -52,7 +51,7 @@ func (s *server) handleShowPost(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {
-		response.NotFoundResponse(w)
+		response.NotFoundResponse(w, r)
 		return
 	}
 
@@ -62,17 +61,15 @@ func (s *server) handleShowPost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrRecordNotFound):
-			response.NotFoundResponse(w)
+			response.NotFoundResponse(w, r)
 		default:
-			s.Logger.Println(err)
-			response.ServerErrorResponse(w)
+			response.ServerErrorResponse(w, s.Logger, err)
 		}
 		return
 	}
 
 	if err := response.JSONResponse(w, http.StatusOK, post); err != nil {
-		s.Logger.Println(err)
-		response.ServerErrorResponse(w)
+		response.ServerErrorResponse(w, s.Logger, err)
 	}
 }
 
@@ -80,7 +77,7 @@ func (s *server) handleUpdatePost(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {
-		response.NotFoundResponse(w)
+		response.NotFoundResponse(w, r)
 		return
 	}
 
@@ -90,10 +87,9 @@ func (s *server) handleUpdatePost(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrRecordNotFound):
-			response.NotFoundResponse(w)
+			response.NotFoundResponse(w, r)
 		default:
-			s.Logger.Println(err)
-			response.ServerErrorResponse(w)
+			response.ServerErrorResponse(w, s.Logger, err)
 		}
 		return
 	}
@@ -136,15 +132,13 @@ func (s *server) handleUpdatePost(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, store.ErrEditConflict):
 			response.EditConflictResponse(w)
 		default:
-			s.Logger.Println(err)
-			response.ServerErrorResponse(w)
+			response.ServerErrorResponse(w, s.Logger, err)
 		}
 		return
 	}
 
 	if err := response.JSONResponse(w, http.StatusOK, post); err != nil {
-		s.Logger.Println(err)
-		response.ServerErrorResponse(w)
+		response.ServerErrorResponse(w, s.Logger, err)
 	}
 }
 
@@ -152,7 +146,7 @@ func (s *server) handleDeletePost(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id, err := strconv.ParseInt(vars["id"], 10, 64)
 	if err != nil {
-		response.NotFoundResponse(w)
+		response.NotFoundResponse(w, r)
 		return
 	}
 
@@ -161,25 +155,23 @@ func (s *server) handleDeletePost(w http.ResponseWriter, r *http.Request) {
 	if err := repo.Delete(id); err != nil {
 		switch {
 		case errors.Is(err, store.ErrRecordNotFound):
-			response.NotFoundResponse(w)
+			response.NotFoundResponse(w, r)
 		default:
-			s.Logger.Println(err)
-			response.ServerErrorResponse(w)
+			response.ServerErrorResponse(w, s.Logger, err)
 		}
 		return
 	}
 
 	err = response.JSONResponse(w, http.StatusOK, map[string]string{"message": "post successfully deleted"})
 	if err != nil {
-		s.Logger.Println(err)
-		response.ServerErrorResponse(w)
+		response.ServerErrorResponse(w, s.Logger, err)
 	}
 }
 
 func (s *server) handleListPosts(w http.ResponseWriter, r *http.Request) {
 	var input struct {
-		Title    string
-		Tags     []string
+		Title string
+		Tags  []string
 		store.Filters
 	}
 

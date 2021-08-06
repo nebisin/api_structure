@@ -2,6 +2,7 @@ package response
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -15,12 +16,13 @@ func ErrorResponse(w http.ResponseWriter, status int, message interface{}) {
 	}
 }
 
-func ServerErrorResponse(w http.ResponseWriter) {
+func ServerErrorResponse(w http.ResponseWriter, log *log.Logger, err error) {
+	log.Println(err.Error())
 	message := "something went wrong"
 	ErrorResponse(w, http.StatusInternalServerError, message)
 }
 
-func NotFoundResponse(w http.ResponseWriter) {
+func NotFoundResponse(w http.ResponseWriter, r *http.Request) {
 	message := "the requested resource could not be found"
 	ErrorResponse(w, http.StatusNotFound, message)
 }

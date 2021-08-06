@@ -9,6 +9,9 @@ import (
 func (s *server) routes() {
 	s.Router = mux.NewRouter()
 
+	s.Router.NotFoundHandler = http.HandlerFunc(response.NotFoundResponse)
+	s.Router.MethodNotAllowedHandler = http.HandlerFunc(response.MethodNotAllowedResponse)
+
 	s.Router.HandleFunc("/v1/healthcheck", s.handleHealthCheck)
 	s.Router.HandleFunc("/v1/posts", s.handleCreatePost).Methods(http.MethodPost)
 	s.Router.HandleFunc("/v1/posts/{id}", s.handleShowPost).Methods(http.MethodGet)
@@ -20,7 +23,6 @@ func (s *server) routes() {
 func (s *server) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	err := response.JSONResponse(w, http.StatusOK, map[string]bool{"ok": true})
 	if err != nil {
-		s.Logger.Println(err)
-		response.ServerErrorResponse(w)
+		response.ServerErrorResponse(w, s.Logger, err)
 	}
 }
