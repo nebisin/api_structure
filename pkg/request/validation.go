@@ -13,15 +13,20 @@ func ValidateInput(input interface{}) map[string]string {
 		errs := err.(validator.ValidationErrors)
 		errorMap := make(map[string]string)
 		for _, fieldError := range errs {
+			key := strings.ToLower(fieldError.Field())
 			switch {
 			case fieldError.Tag() == "required":
-				errorMap[strings.ToLower(fieldError.Field())] = "must be provided"
+				errorMap[key] = "must be provided"
 			case fieldError.Tag() == "unique":
-				errorMap[strings.ToLower(fieldError.Field())] = "must not contain duplicate values"
+				errorMap[key] = "must not contain duplicate values"
 			case fieldError.Tag() == "gt":
-				errorMap[strings.ToLower(fieldError.Field())] = fmt.Sprintf("must be greater than %s", fieldError.Param())
+				errorMap[key] = fmt.Sprintf("must be greater than %s", fieldError.Param())
 			case fieldError.Tag() == "lt":
-				errorMap[strings.ToLower(fieldError.Field())] = fmt.Sprintf("must be less than %s", fieldError.Param())
+				errorMap[key] = fmt.Sprintf("must be less than %s", fieldError.Param())
+			case fieldError.Tag() == "oneof":
+				errorMap[key] = fmt.Sprintf("must be one of %s", fieldError.Param())
+			default:
+				errorMap[key] = fmt.Sprint(fieldError.Error())
 			}
 		}
 		return errorMap

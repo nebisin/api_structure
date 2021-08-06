@@ -20,7 +20,7 @@ type Post struct {
 }
 
 type Filters struct {
-	Page     int    `validate:"gt=0" json:"page"`
-	PageSize int    `validate:"gt=0,lt=100" json:"page_size"`
-	Sort     string `json:"sort"`
+	Page  int    `json:"page" validate:"gt=0"`
+	Limit int    `json:"limit" validate:"gt=0,lt=100"`
+	Sort  string `json:"sort" validate:"oneof='id' 'title' '-id' '-title'"`
 }

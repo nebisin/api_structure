@@ -189,7 +189,7 @@ func (s *server) handleListPosts(w http.ResponseWriter, r *http.Request) {
 	input.Tags = request.ReadCSV(qs, "tags", []string{})
 
 	input.Filters.Page = request.ReadInt(qs, "page", 1)
-	input.Filters.PageSize = request.ReadInt(qs, "page_size", 20)
+	input.Filters.Limit = request.ReadInt(qs, "limit", 20)
 
 	input.Filters.Sort = request.ReadString(qs, "sort", "id")
 
