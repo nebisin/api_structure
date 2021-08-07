@@ -6,7 +6,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
-	"log"
+	"github.com/sirupsen/logrus"
 	"os"
 	"time"
 )
@@ -14,7 +14,7 @@ import (
 type server struct {
 	DB     *sql.DB
 	Router *mux.Router
-	Logger *log.Logger
+	Logger *logrus.Logger
 }
 
 func NewServer() *server {
@@ -22,16 +22,24 @@ func NewServer() *server {
 }
 
 func (s *server) Run() {
+	s.Logger = logrus.New()
+	s.Logger.SetOutput(os.Stdout)
+	s.Logger.SetFormatter(&logrus.TextFormatter{
+		FullTimestamp: true,
+	})
+
+	s.Logger.Info("we are getting env values")
 	err := godotenv.Load()
 	if err != nil {
-		s.Logger.Fatal("Error loading .env file")
+		s.Logger.WithError(err).Fatal("something went wrong while getting env")
 	}
 
 	s.routes()
 
+	s.Logger.Info("connecting the database")
 	db, err := openDB()
 	if err != nil {
-		s.Logger.Fatal(err)
+		s.Logger.WithError(err).Fatal("an error occurred while connecting the database")
 	}
 
 	s.DB = db

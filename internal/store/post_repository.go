@@ -140,7 +140,7 @@ LIMIT $3 OFFSET $4`, filters.sortColumn(), filters.sortDirection())
 
 	defer rows.Close()
 
-	var posts []*Post
+	posts := make([]*Post, 0, filters.Limit)
 
 	for rows.Next() {
 		var post Post

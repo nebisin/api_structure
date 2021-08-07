@@ -37,12 +37,12 @@ func (s *server) handleCreatePost(w http.ResponseWriter, r *http.Request) {
 
 	err := repo.Insert(&post)
 	if err != nil {
-		response.ServerErrorResponse(w, s.Logger, err)
+		response.ServerErrorResponse(w, r, s.Logger, err)
 		return
 	}
 
-	if err := response.JSONResponse(w, http.StatusCreated, post); err != nil {
-		response.ServerErrorResponse(w, s.Logger, err)
+	if err := response.JSONResponse(w, http.StatusCreated, response.Envelope{"post": post}); err != nil {
+		response.ServerErrorResponse(w, r, s.Logger, err)
 	}
 }
 
@@ -62,13 +62,13 @@ func (s *server) handleShowPost(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, store.ErrRecordNotFound):
 			response.NotFoundResponse(w, r)
 		default:
-			response.ServerErrorResponse(w, s.Logger, err)
+			response.ServerErrorResponse(w, r, s.Logger, err)
 		}
 		return
 	}
 
-	if err := response.JSONResponse(w, http.StatusOK, post); err != nil {
-		response.ServerErrorResponse(w, s.Logger, err)
+	if err := response.JSONResponse(w, http.StatusOK, response.Envelope{"post": post}); err != nil {
+		response.ServerErrorResponse(w, r, s.Logger, err)
 	}
 }
 
@@ -88,7 +88,7 @@ func (s *server) handleUpdatePost(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, store.ErrRecordNotFound):
 			response.NotFoundResponse(w, r)
 		default:
-			response.ServerErrorResponse(w, s.Logger, err)
+			response.ServerErrorResponse(w, r, s.Logger, err)
 		}
 		return
 	}
@@ -131,13 +131,13 @@ func (s *server) handleUpdatePost(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, store.ErrEditConflict):
 			response.EditConflictResponse(w)
 		default:
-			response.ServerErrorResponse(w, s.Logger, err)
+			response.ServerErrorResponse(w, r, s.Logger, err)
 		}
 		return
 	}
 
-	if err := response.JSONResponse(w, http.StatusOK, post); err != nil {
-		response.ServerErrorResponse(w, s.Logger, err)
+	if err := response.JSONResponse(w, http.StatusOK, response.Envelope{"post": post}); err != nil {
+		response.ServerErrorResponse(w, r, s.Logger, err)
 	}
 }
 
@@ -156,14 +156,14 @@ func (s *server) handleDeletePost(w http.ResponseWriter, r *http.Request) {
 		case errors.Is(err, store.ErrRecordNotFound):
 			response.NotFoundResponse(w, r)
 		default:
-			response.ServerErrorResponse(w, s.Logger, err)
+			response.ServerErrorResponse(w, r, s.Logger, err)
 		}
 		return
 	}
 
-	err = response.JSONResponse(w, http.StatusOK, map[string]string{"message": "post successfully deleted"})
+	err = response.JSONResponse(w, http.StatusOK, response.Envelope{"message": "post successfully deleted"})
 	if err != nil {
-		response.ServerErrorResponse(w, s.Logger, err)
+		response.ServerErrorResponse(w, r, s.Logger, err)
 	}
 }
 
@@ -194,11 +194,11 @@ func (s *server) handleListPosts(w http.ResponseWriter, r *http.Request) {
 
 	posts, err := repo.GetAll(input.Title, input.Tags, input.Filters)
 	if err != nil {
-		response.ServerErrorResponse(w, s.Logger, err)
+		response.ServerErrorResponse(w, r, s.Logger, err)
 		return
 	}
 
-	if err := response.JSONResponse(w, http.StatusOK, posts); err != nil {
-		response.ServerErrorResponse(w, s.Logger, err)
+	if err := response.JSONResponse(w, http.StatusOK, response.Envelope{"posts": posts}); err != nil {
+		response.ServerErrorResponse(w, r, s.Logger, err)
 	}
 }

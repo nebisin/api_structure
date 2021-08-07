@@ -2,22 +2,23 @@ package response
 
 import (
 	"fmt"
-	"log"
+	"github.com/sirupsen/logrus"
 	"net/http"
 )
 
 func ErrorResponse(w http.ResponseWriter, status int, message interface{}) {
-	envelope := map[string]interface{}{
-		"error": message,
-	}
-	err := JSONResponse(w, status, envelope)
+	err := JSONResponse(w, status, Envelope{"error": message})
 	if err != nil {
 		w.WriteHeader(500)
 	}
 }
 
-func ServerErrorResponse(w http.ResponseWriter, log *log.Logger, err error) {
-	log.Println(err.Error())
+func ServerErrorResponse(w http.ResponseWriter, r *http.Request, log *logrus.Logger, err error) {
+	log.WithFields(map[string]interface{}{
+		"request_method": r.Method,
+		"request_url": r.URL.String(),
+	}).WithError(err).Error("server error response")
+
 	message := "something went wrong"
 	ErrorResponse(w, http.StatusInternalServerError, message)
 }
@@ -37,10 +38,7 @@ func BadRequestResponse(w http.ResponseWriter, err error) {
 }
 
 func FailedValidationResponse(w http.ResponseWriter, errs map[string]string) {
-	envelope := map[string]interface{}{
-		"errors": errs,
-	}
-	err := JSONResponse(w, http.StatusUnprocessableEntity, envelope)
+	err := JSONResponse(w, http.StatusUnprocessableEntity, Envelope{"errors": errs})
 	if err != nil {
 		w.WriteHeader(500)
 	}

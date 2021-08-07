@@ -5,7 +5,9 @@ import (
 	"net/http"
 )
 
-func JSONResponse(w http.ResponseWriter, status int, data interface{}) error {
+type Envelope map[string]interface{}
+
+func JSONResponse(w http.ResponseWriter, status int, data Envelope) error {
 	js, err := json.Marshal(data)
 	if err != nil {
 		return err
