@@ -19,3 +19,7 @@ func (f Filters) sortDirection() string {
 
 	return "ASC"
 }
+
+func (f Filters) offset() int {
+	return (f.Page - 1) * f.Limit
+}

@@ -125,12 +125,15 @@ func (r *postRepository) GetAll(title string, tags []string, filters Filters) ([
 FROM posts
 WHERE (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) OR $1 = '')
 AND (tags @> $2 OR $2 = '{}')
-ORDER BY %s %s, id ASC`, filters.sortColumn(), filters.sortDirection())
+ORDER BY %s %s, id ASC
+LIMIT $3 OFFSET $4`, filters.sortColumn(), filters.sortDirection())
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	rows, err := r.DB.QueryContext(ctx, query, title, pq.Array(tags))
+	args := []interface{}{title, pq.Array(tags), filters.Limit, filters.offset()}
+
+	rows, err := r.DB.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
