@@ -7,6 +7,8 @@ import (
 )
 
 func (s *server) routes() {
+	s.Logger.Info("initializing the routes")
+
 	s.Router = mux.NewRouter()
 
 	s.Router.NotFoundHandler = http.HandlerFunc(response.NotFoundResponse)
@@ -23,6 +25,6 @@ func (s *server) routes() {
 func (s *server) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	err := response.JSONResponse(w, http.StatusOK, response.Envelope{"ok": true})
 	if err != nil {
-		response.ServerErrorResponse(w, s.Logger, err)
+		response.ServerErrorResponse(w, r, s.Logger, err)
 	}
 }
