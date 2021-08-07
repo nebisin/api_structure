@@ -18,9 +18,3 @@ type Post struct {
 	Tags      []string  `json:"tags,omitempty"`
 	Version   int32     `json:"version"`
 }
-
-type Filters struct {
-	Page  int    `json:"page" validate:"gt=0"`
-	Limit int    `json:"limit" validate:"gt=0,lt=100"`
-	Sort  string `json:"sort" validate:"oneof='id' 'title' '-id' '-title'"`
-}
