@@ -7,10 +7,7 @@ import (
 )
 
 func ErrorResponse(w http.ResponseWriter, status int, message interface{}) {
-	envelope := map[string]interface{}{
-		"error": message,
-	}
-	err := JSONResponse(w, status, envelope)
+	err := JSONResponse(w, status, Envelope{"error": message})
 	if err != nil {
 		w.WriteHeader(500)
 	}
@@ -37,10 +34,7 @@ func BadRequestResponse(w http.ResponseWriter, err error) {
 }
 
 func FailedValidationResponse(w http.ResponseWriter, errs map[string]string) {
-	envelope := map[string]interface{}{
-		"errors": errs,
-	}
-	err := JSONResponse(w, http.StatusUnprocessableEntity, envelope)
+	err := JSONResponse(w, http.StatusUnprocessableEntity, Envelope{"errors": errs})
 	if err != nil {
 		w.WriteHeader(500)
 	}

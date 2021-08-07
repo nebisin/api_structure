@@ -41,7 +41,7 @@ func (s *server) handleCreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := response.JSONResponse(w, http.StatusCreated, post); err != nil {
+	if err := response.JSONResponse(w, http.StatusCreated, response.Envelope{"post": post}); err != nil {
 		response.ServerErrorResponse(w, s.Logger, err)
 	}
 }
@@ -67,7 +67,7 @@ func (s *server) handleShowPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := response.JSONResponse(w, http.StatusOK, post); err != nil {
+	if err := response.JSONResponse(w, http.StatusOK, response.Envelope{"post": post}); err != nil {
 		response.ServerErrorResponse(w, s.Logger, err)
 	}
 }
@@ -136,7 +136,7 @@ func (s *server) handleUpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := response.JSONResponse(w, http.StatusOK, post); err != nil {
+	if err := response.JSONResponse(w, http.StatusOK, response.Envelope{"post": post}); err != nil {
 		response.ServerErrorResponse(w, s.Logger, err)
 	}
 }
@@ -161,7 +161,7 @@ func (s *server) handleDeletePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = response.JSONResponse(w, http.StatusOK, map[string]string{"message": "post successfully deleted"})
+	err = response.JSONResponse(w, http.StatusOK, response.Envelope{"message": "post successfully deleted"})
 	if err != nil {
 		response.ServerErrorResponse(w, s.Logger, err)
 	}
@@ -198,7 +198,7 @@ func (s *server) handleListPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := response.JSONResponse(w, http.StatusOK, posts); err != nil {
+	if err := response.JSONResponse(w, http.StatusOK, response.Envelope{"posts": posts}); err != nil {
 		response.ServerErrorResponse(w, s.Logger, err)
 	}
 }
