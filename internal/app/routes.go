@@ -20,6 +20,8 @@ func (s *server) routes() {
 	s.Router.HandleFunc("/v1/posts", s.handleListPosts).Methods(http.MethodGet)
 	s.Router.HandleFunc("/v1/posts/{id}", s.handleUpdatePost).Methods(http.MethodPatch)
 	s.Router.HandleFunc("/v1/posts/{id}", s.handleDeletePost).Methods(http.MethodDelete)
+
+	s.Router.Use(s.recoverPanic)
 }
 
 func (s *server) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
