@@ -50,7 +50,7 @@ func ReadJSON(w http.ResponseWriter, r *http.Request, dst interface{}) error {
 
 		// If request body exceeds 1MB in size the decode will fail.
 		case err.Error() == "http: request body too large":
-			return fmt.Errorf("body must be larger than %d bytes", maxBytes)
+			return fmt.Errorf("body must not be larger than %d bytes", maxBytes)
 
 		// this will happen if we pass a non-nil pointer to Decode()
 		// we catch this and panic instead of returning the error
