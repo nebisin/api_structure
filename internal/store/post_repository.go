@@ -122,12 +122,14 @@ WHERE id = $1`
 func (r *postRepository) GetAll(title string, tags []string, filters Filters) ([]*Post, error) {
 	query := `SELECT id, created_at, title, tags, version
 FROM posts
+WHERE (to_tsvector('simple', title) @@ plainto_tsquery('simple', $1) OR $1 = '')
+AND (tags @> $2 OR $2 = '{}')
 ORDER BY id`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	rows, err := r.DB.QueryContext(ctx, query)
+	rows, err := r.DB.QueryContext(ctx, query, title, pq.Array(tags))
 	if err != nil {
 		return nil, err
 	}
