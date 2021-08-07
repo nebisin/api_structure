@@ -2,7 +2,6 @@ package app
 
 import (
 	"errors"
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/nebisin/api_structure/internal/store"
 	"github.com/nebisin/api_structure/pkg/request"
@@ -191,5 +190,15 @@ func (s *server) handleListPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "%+v\n", input)
+	repo := store.NewPostRepository(s.DB)
+
+	posts, err := repo.GetAll(input.Title, input.Tags, input.Filters)
+	if err != nil {
+		response.ServerErrorResponse(w, s.Logger, err)
+		return
+	}
+
+	if err := response.JSONResponse(w, http.StatusOK, posts); err != nil {
+		response.ServerErrorResponse(w, s.Logger, err)
+	}
 }

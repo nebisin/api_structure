@@ -101,20 +101,62 @@ WHERE id = $1`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	
+
 	result, err := r.DB.ExecContext(ctx, query, id)
 	if err != nil {
 		return err
 	}
-	
+
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return err
 	}
-	
+
 	if rowsAffected == 0 {
 		return ErrRecordNotFound
 	}
 
 	return nil
+}
+
+func (r *postRepository) GetAll(title string, tags []string, filters Filters) ([]*Post, error) {
+	query := `SELECT id, created_at, title, tags, version
+FROM posts
+ORDER BY id`
+
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	rows, err := r.DB.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var posts []*Post
+
+	for rows.Next() {
+		var post Post
+
+		err := rows.Scan(
+			&post.ID,
+			&post.CreatedAt,
+			&post.Title,
+			pq.Array(&post.Tags),
+			&post.Version,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		posts = append(posts, &post)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return posts, nil
+
 }
