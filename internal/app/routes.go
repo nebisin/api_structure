@@ -4,12 +4,29 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/nebisin/api_structure/pkg/response"
 	"net/http"
+	"time"
 )
 
 func (s *server) routes() {
 	s.logger.Info("initializing the routes")
 
 	s.router = mux.NewRouter()
+
+	go func() {
+		for {
+			time.Sleep(time.Minute)
+
+			mu.Lock()
+
+			for ip, client := range clients{
+				if time.Since(client.lastSeen) > 3*time.Minute {
+					delete(clients, ip)
+				}
+			}
+
+			mu.Unlock()
+		}
+	}()
 
 	s.router.Use(s.rateLimit)
 	s.router.Use(s.recoverPanic)
