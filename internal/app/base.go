@@ -4,10 +4,12 @@ import (
 	"context"
 	"database/sql"
 	"flag"
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
+	"net/http"
 	"os"
 	"time"
 )
@@ -15,16 +17,16 @@ import (
 const version = "1.0.0"
 
 type config struct {
-	Port  int
-	Env   string
-	Dsn string
+	port int
+	env  string
+	dsn  string
 }
 
 type server struct {
-	DB     *sql.DB
-	Router *mux.Router
-	Logger *logrus.Logger
-	Config config
+	db      *sql.DB
+	router  *mux.Router
+	logger  *logrus.Logger
+	config  config
 }
 
 func NewServer() *server {
@@ -32,9 +34,9 @@ func NewServer() *server {
 }
 
 func (s *server) Run() {
-	s.Logger = logrus.New()
-	s.Logger.SetOutput(os.Stdout)
-	s.Logger.SetFormatter(&logrus.TextFormatter{
+	s.logger = logrus.New()
+	s.logger.SetOutput(os.Stdout)
+	s.logger.SetFormatter(&logrus.TextFormatter{
 		FullTimestamp: true,
 	})
 
@@ -42,34 +44,44 @@ func (s *server) Run() {
 
 	s.routes()
 
-	s.Logger.Info("connecting the database")
-	db, err := openDB(s.Config)
+	s.logger.Info("connecting the database")
+	db, err := openDB(s.config)
 	if err != nil {
-		s.Logger.WithError(err).Fatal("an error occurred while connecting the database")
+		s.logger.WithError(err).Fatal("an error occurred while connecting the database")
+	}
+	s.db = db
+
+	srv := &http.Server{
+		Addr:         fmt.Sprintf(":%d", s.config.port),
+		Handler:      s.router,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		IdleTimeout:  time.Minute,
 	}
 
-	s.DB = db
+	s.logger.WithField("port", srv.Addr).Info("starting the server")
+	s.logger.Fatal(srv.ListenAndServe())
 }
 
 func (s *server) getConfig() {
 	var cfg config
 
-	s.Logger.Info("we are getting env values")
+	s.logger.Info("we are getting env values")
 	err := godotenv.Load()
 	if err != nil {
-		s.Logger.WithError(err).Fatal("something went wrong while getting env")
+		s.logger.WithError(err).Fatal("something went wrong while getting env")
 	}
 
-	flag.IntVar(&cfg.Port, "port", 3000, "API server port")
-	flag.StringVar(&cfg.Env, "env", "development", "Environment (development|staging|production)")
-	flag.StringVar(&cfg.Dsn, "db-dsn", os.Getenv("DB_URI"), "PostgreSQL DSN")
+	flag.IntVar(&cfg.port, "port", 3000, "API server port")
+	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
+	flag.StringVar(&cfg.dsn, "db-dsn", os.Getenv("DB_URI"), "PostgreSQL DSN")
 	flag.Parse()
 
-	s.Config = cfg
+	s.config = cfg
 }
 
 func openDB(cfg config) (*sql.DB, error) {
-	db, err := sql.Open("postgres", cfg.Dsn)
+	db, err := sql.Open("postgres", cfg.dsn)
 	if err != nil {
 		return nil, err
 	}

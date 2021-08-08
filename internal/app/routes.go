@@ -4,33 +4,53 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/nebisin/api_structure/pkg/response"
 	"net/http"
+	"time"
 )
 
 func (s *server) routes() {
-	s.Logger.Info("initializing the routes")
+	s.logger.Info("initializing the routes")
 
-	s.Router = mux.NewRouter()
+	s.router = mux.NewRouter()
 
-	s.Router.NotFoundHandler = http.HandlerFunc(response.NotFoundResponse)
-	s.Router.MethodNotAllowedHandler = http.HandlerFunc(response.MethodNotAllowedResponse)
+	go func() {
+		for {
+			time.Sleep(time.Minute)
 
-	s.Router.HandleFunc("/v1/healthcheck", s.handleHealthCheck)
-	s.Router.HandleFunc("/v1/posts", s.handleCreatePost).Methods(http.MethodPost)
-	s.Router.HandleFunc("/v1/posts/{id}", s.handleShowPost).Methods(http.MethodGet)
-	s.Router.HandleFunc("/v1/posts", s.handleListPosts).Methods(http.MethodGet)
-	s.Router.HandleFunc("/v1/posts/{id}", s.handleUpdatePost).Methods(http.MethodPatch)
-	s.Router.HandleFunc("/v1/posts/{id}", s.handleDeletePost).Methods(http.MethodDelete)
+			mu.Lock()
 
-	s.Router.Use(s.recoverPanic)
+			for ip, client := range clients{
+				if time.Since(client.lastSeen) > 3*time.Minute {
+					delete(clients, ip)
+				}
+			}
+
+			mu.Unlock()
+		}
+	}()
+
+	s.router.Use(s.rateLimit)
+	s.router.Use(s.recoverPanic)
+
+	s.router.NotFoundHandler = http.HandlerFunc(response.NotFoundResponse)
+	s.router.MethodNotAllowedHandler = http.HandlerFunc(response.MethodNotAllowedResponse)
+
+	s.router.HandleFunc("/v1/healthcheck", s.handleHealthCheck)
+	s.router.HandleFunc("/v1/posts", s.handleCreatePost).Methods(http.MethodPost)
+	s.router.HandleFunc("/v1/posts/{id}", s.handleShowPost).Methods(http.MethodGet)
+	s.router.HandleFunc("/v1/posts", s.handleListPosts).Methods(http.MethodGet)
+	s.router.HandleFunc("/v1/posts/{id}", s.handleUpdatePost).Methods(http.MethodPatch)
+	s.router.HandleFunc("/v1/posts/{id}", s.handleDeletePost).Methods(http.MethodDelete)
+
+
 }
 
 func (s *server) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	err := response.JSONResponse(w, http.StatusOK, response.Envelope{
 		"status": "available",
-		"environment": s.Config.Env,
+		"environment": s.config.env,
 		"version": version,
 	})
 	if err != nil {
-		response.ServerErrorResponse(w, r, s.Logger, err)
+		response.ServerErrorResponse(w, r, s.logger, err)
 	}
 }
