@@ -9,8 +9,10 @@ import (
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/time/rate"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 )
 
@@ -27,6 +29,15 @@ type server struct {
 	router  *mux.Router
 	logger  *logrus.Logger
 	config  config
+	limiter struct{
+		mu      sync.Mutex
+		clients map[string]*client
+	}
+}
+
+type client struct {
+	limiter  *rate.Limiter
+	lastSeen time.Time
 }
 
 func NewServer() *server {
@@ -43,6 +54,8 @@ func (s *server) Run() {
 	s.getConfig()
 
 	s.routes()
+
+	s.setupLimiter()
 
 	s.logger.Info("connecting the database")
 	db, err := openDB(s.config)
@@ -94,4 +107,24 @@ func openDB(cfg config) (*sql.DB, error) {
 	}
 
 	return db, nil
+}
+
+func (s *server) setupLimiter() {
+	s.limiter.clients = make(map[string]*client)
+
+	go func() {
+		for {
+			time.Sleep(time.Minute)
+
+			s.limiter.mu.Lock()
+
+			for ip, client := range s.limiter.clients{
+				if time.Since(client.lastSeen) > 3*time.Minute {
+					delete(s.limiter.clients, ip)
+				}
+			}
+
+			s.limiter.mu.Unlock()
+		}
+	}()
 }
