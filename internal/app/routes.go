@@ -11,6 +11,9 @@ func (s *server) routes() {
 
 	s.router = mux.NewRouter()
 
+	s.router.Use(s.rateLimit)
+	s.router.Use(s.recoverPanic)
+
 	s.router.NotFoundHandler = http.HandlerFunc(response.NotFoundResponse)
 	s.router.MethodNotAllowedHandler = http.HandlerFunc(response.MethodNotAllowedResponse)
 
@@ -21,7 +24,7 @@ func (s *server) routes() {
 	s.router.HandleFunc("/v1/posts/{id}", s.handleUpdatePost).Methods(http.MethodPatch)
 	s.router.HandleFunc("/v1/posts/{id}", s.handleDeletePost).Methods(http.MethodDelete)
 
-	s.router.Use(s.recoverPanic)
+
 }
 
 func (s *server) handleHealthCheck(w http.ResponseWriter, r *http.Request) {

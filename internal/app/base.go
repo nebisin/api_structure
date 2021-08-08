@@ -9,6 +9,7 @@ import (
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
+	"golang.org/x/time/rate"
 	"net/http"
 	"os"
 	"time"
@@ -23,10 +24,11 @@ type config struct {
 }
 
 type server struct {
-	db     *sql.DB
-	router *mux.Router
-	logger *logrus.Logger
-	config config
+	db      *sql.DB
+	router  *mux.Router
+	logger  *logrus.Logger
+	config  config
+	limiter *rate.Limiter
 }
 
 func NewServer() *server {
@@ -41,6 +43,9 @@ func (s *server) Run() {
 	})
 
 	s.getConfig()
+
+	limiter := rate.NewLimiter(2, 4)
+	s.limiter = limiter
 
 	s.routes()
 
