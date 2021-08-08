@@ -25,7 +25,11 @@ func (s *server) routes() {
 }
 
 func (s *server) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
-	err := response.JSONResponse(w, http.StatusOK, response.Envelope{"ok": true})
+	err := response.JSONResponse(w, http.StatusOK, response.Envelope{
+		"status": "available",
+		"environment": s.Config.Env,
+		"version": version,
+	})
 	if err != nil {
 		response.ServerErrorResponse(w, r, s.Logger, err)
 	}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/nebisin/api_structure/internal/app"
 	"net/http"
 	"time"
@@ -12,7 +13,7 @@ func main() {
 	h.Run()
 
 	srv := &http.Server{
-		Addr:         ":3000",
+		Addr:         fmt.Sprintf(":%d", h.Config.Port),
 		Handler:      h.Router,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
