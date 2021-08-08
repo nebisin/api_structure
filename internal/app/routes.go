@@ -7,30 +7,30 @@ import (
 )
 
 func (s *server) routes() {
-	s.Logger.Info("initializing the routes")
+	s.logger.Info("initializing the routes")
 
-	s.Router = mux.NewRouter()
+	s.router = mux.NewRouter()
 
-	s.Router.NotFoundHandler = http.HandlerFunc(response.NotFoundResponse)
-	s.Router.MethodNotAllowedHandler = http.HandlerFunc(response.MethodNotAllowedResponse)
+	s.router.NotFoundHandler = http.HandlerFunc(response.NotFoundResponse)
+	s.router.MethodNotAllowedHandler = http.HandlerFunc(response.MethodNotAllowedResponse)
 
-	s.Router.HandleFunc("/v1/healthcheck", s.handleHealthCheck)
-	s.Router.HandleFunc("/v1/posts", s.handleCreatePost).Methods(http.MethodPost)
-	s.Router.HandleFunc("/v1/posts/{id}", s.handleShowPost).Methods(http.MethodGet)
-	s.Router.HandleFunc("/v1/posts", s.handleListPosts).Methods(http.MethodGet)
-	s.Router.HandleFunc("/v1/posts/{id}", s.handleUpdatePost).Methods(http.MethodPatch)
-	s.Router.HandleFunc("/v1/posts/{id}", s.handleDeletePost).Methods(http.MethodDelete)
+	s.router.HandleFunc("/v1/healthcheck", s.handleHealthCheck)
+	s.router.HandleFunc("/v1/posts", s.handleCreatePost).Methods(http.MethodPost)
+	s.router.HandleFunc("/v1/posts/{id}", s.handleShowPost).Methods(http.MethodGet)
+	s.router.HandleFunc("/v1/posts", s.handleListPosts).Methods(http.MethodGet)
+	s.router.HandleFunc("/v1/posts/{id}", s.handleUpdatePost).Methods(http.MethodPatch)
+	s.router.HandleFunc("/v1/posts/{id}", s.handleDeletePost).Methods(http.MethodDelete)
 
-	s.Router.Use(s.recoverPanic)
+	s.router.Use(s.recoverPanic)
 }
 
 func (s *server) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
 	err := response.JSONResponse(w, http.StatusOK, response.Envelope{
 		"status": "available",
-		"environment": s.Config.Env,
+		"environment": s.config.env,
 		"version": version,
 	})
 	if err != nil {
-		response.ServerErrorResponse(w, r, s.Logger, err)
+		response.ServerErrorResponse(w, r, s.logger, err)
 	}
 }
