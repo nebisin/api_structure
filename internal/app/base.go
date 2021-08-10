@@ -4,13 +4,11 @@ import (
 	"context"
 	"database/sql"
 	"flag"
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
-	"net/http"
 	"os"
 	"sync"
 	"time"
@@ -29,7 +27,7 @@ type server struct {
 	router  *mux.Router
 	logger  *logrus.Logger
 	config  config
-	limiter struct{
+	limiter struct {
 		mu      sync.Mutex
 		clients map[string]*client
 	}
@@ -64,16 +62,9 @@ func (s *server) Run() {
 	}
 	s.db = db
 
-	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", s.config.port),
-		Handler:      s.router,
-		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
-		IdleTimeout:  time.Minute,
+	if err := s.serve(); err != nil {
+		s.logger.WithError(err).Fatal("an error occurred while starting the server")
 	}
-
-	s.logger.WithField("port", srv.Addr).Info("starting the server")
-	s.logger.Fatal(srv.ListenAndServe())
 }
 
 func (s *server) getConfig() {
@@ -118,7 +109,7 @@ func (s *server) setupLimiter() {
 
 			s.limiter.mu.Lock()
 
-			for ip, client := range s.limiter.clients{
+			for ip, client := range s.limiter.clients {
 				if time.Since(client.lastSeen) > 3*time.Minute {
 					delete(s.limiter.clients, ip)
 				}
