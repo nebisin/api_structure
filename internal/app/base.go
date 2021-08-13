@@ -60,6 +60,7 @@ func (s *server) Run() {
 	if err != nil {
 		s.logger.WithError(err).Fatal("an error occurred while connecting the database")
 	}
+	defer db.Close()
 	s.db = db
 
 	if err := s.serve(); err != nil {

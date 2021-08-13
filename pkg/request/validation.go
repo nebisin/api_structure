@@ -25,6 +25,12 @@ func ValidateInput(input interface{}) map[string]string {
 				errorMap[key] = fmt.Sprintf("must be less than %s", fieldError.Param())
 			case fieldError.Tag() == "oneof":
 				errorMap[key] = fmt.Sprintf("must be one of %s", fieldError.Param())
+			case fieldError.Tag() == "max":
+				errorMap[key] = fmt.Sprintf("length must be not more then %s", fieldError.Param())
+			case fieldError.Tag() == "min":
+				errorMap[key] = fmt.Sprintf("length must be minimum %s long", fieldError.Param())
+			case fieldError.Tag() == "email":
+				errorMap[key] = "must be a valid email"
 			default:
 				errorMap[key] = fmt.Sprint(fieldError.Error())
 			}
