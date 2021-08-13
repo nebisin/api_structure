@@ -22,11 +22,11 @@ type Post struct {
 }
 
 type User struct {
-	ID int64 `json:"id"`
-	CreatedAt time.Time `json:"created_at"`
-	Name string `json:"name" validate:"required,max=500"`
-	Email string `json:"email" validate:"required,email"`
-	Password auth.Password `json:"-"`
-	Activated bool `json:"activated"`
-	Version int `json:"-"`
+	ID        int64         `json:"id"`
+	CreatedAt time.Time     `json:"created_at"`
+	Name      string        `json:"name"`
+	Email     string        `json:"email"`
+	Password  auth.Password `json:"-"`
+	Activated bool          `json:"activated"`
+	Version   int           `json:"-"`
 }

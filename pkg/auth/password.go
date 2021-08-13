@@ -6,8 +6,8 @@ import (
 )
 
 type Password struct {
-	Plaintext *string `validate:"required,max=72,min=8"`
-	Hash []byte `validate:"required"`
+	Plaintext *string
+	Hash []byte
 }
 
 func (p *Password) Set(plaintextPassword string) error {

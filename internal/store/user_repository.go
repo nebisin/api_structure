@@ -27,7 +27,7 @@ RETURNING id, created_at, version`
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
 	defer cancel()
 
-	err := r.DB.QueryRowContext(ctx, query, args...).Scan(&user.ID, user.CreatedAt, user.Version)
+	err := r.DB.QueryRowContext(ctx, query, args...).Scan(&user.ID, &user.CreatedAt, &user.Version)
 	if err != nil {
 		switch {
 		case err.Error() == `pq: duplicate key value violates unique constraint "users_email_key"`:
