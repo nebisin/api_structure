@@ -49,6 +49,12 @@ func (s *server) handleRegisterUser(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
+	if err := s.mailer.Send(user.Email, "user_welcome.tmpl", user); err != nil {
+		response.ServerErrorResponse(w, r, s.logger, err)
+		return
+	}
+
 	err = response.JSONResponse(w, http.StatusCreated, response.Envelope{"user": user});
 	if err != nil {
 		response.ServerErrorResponse(w, r, s.logger, err)

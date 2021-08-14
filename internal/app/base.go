@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"github.com/nebisin/api_structure/internal/mailer"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
 	"os"
@@ -20,6 +21,13 @@ type config struct {
 	port int
 	env  string
 	dsn  string
+	smtp struct {
+		host     string
+		port     int
+		username string
+		password string
+		sender   string
+	}
 }
 
 type server struct {
@@ -31,6 +39,7 @@ type server struct {
 		mu      sync.Mutex
 		clients map[string]*client
 	}
+	mailer mailer.Mailer
 }
 
 type client struct {
@@ -50,10 +59,10 @@ func (s *server) Run() {
 	})
 
 	s.getConfig()
-
 	s.routes()
-
 	s.setupLimiter()
+
+	s.mailer = mailer.New(s.config.smtp.host, s.config.smtp.port, s.config.smtp.username, s.config.smtp.password, s.config.smtp.sender)
 
 	s.logger.Info("connecting the database")
 	db, err := openDB(s.config)
@@ -79,7 +88,15 @@ func (s *server) getConfig() {
 
 	flag.IntVar(&cfg.port, "port", 3000, "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
+
 	flag.StringVar(&cfg.dsn, "db-dsn", os.Getenv("DB_URI"), "PostgreSQL DSN")
+
+	flag.StringVar(&cfg.smtp.host, "smtp-host", os.Getenv("SMTP_HOST"), "SMTP host")
+	flag.IntVar(&cfg.smtp.port, "smtp-port", 2525, "SMTP port")
+	flag.StringVar(&cfg.smtp.username, "smtp-username", os.Getenv("SMTP_USERNAME"), "SMTP username")
+	flag.StringVar(&cfg.smtp.password, "smtp-password", os.Getenv("SMTP_PASSWORD"), "SMTP password")
+	flag.StringVar(&cfg.smtp.sender, "smtp-sender", os.Getenv("SMTP_SENDER"), "SMTP sender")
+
 	flag.Parse()
 
 	s.config = cfg
