@@ -50,12 +50,16 @@ func (s *server) handleRegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := s.mailer.Send(user.Email, "user_welcome.tmpl", user); err != nil {
-		response.ServerErrorResponse(w, r, s.logger, err)
-		return
-	}
+	s.background(func() {
+		if err := s.mailer.Send(user.Email, "user_welcome.tmpl", user); err != nil {
+			s.logger.WithFields(map[string]interface{}{
+				"request_method": r.Method,
+				"request_url": r.URL.String(),
+			}).WithError(err).Error("background email error")
+		}
+	})
 
-	err = response.JSONResponse(w, http.StatusCreated, response.Envelope{"user": user});
+	err = response.JSONResponse(w, http.StatusAccepted, response.Envelope{"user": user});
 	if err != nil {
 		response.ServerErrorResponse(w, r, s.logger, err)
 	}

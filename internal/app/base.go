@@ -40,6 +40,7 @@ type server struct {
 		clients map[string]*client
 	}
 	mailer mailer.Mailer
+	wg     sync.WaitGroup
 }
 
 type client struct {
