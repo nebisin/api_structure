@@ -1,0 +1,26 @@
+{{define "subject"}}Welcome to GoPress!{{end}}
+
+{{define "plainBody"}}
+Hi,
+
+Thanks for signing up for a GoPress account. Your user ID number is {{.ID}}.
+
+GoPress
+{{end}}
+
+{{define "htmlBody"}}
+<!doctype html>
+<html>
+<head>
+    <meta name="viewport" content="text/html; charset=UTF-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+</head>
+<body>
+    <p>Hi,</p>
+    <p>Thanks for signing up for a GoPress account. We're excited to have you on board!</p>
+    <p>For future reference, your user ID number is {{.ID}}.</p>
+    <p>Thanks,</p>
+    <p>The GoPress Team</p>
+</body>
+</html>
+{{end}}
