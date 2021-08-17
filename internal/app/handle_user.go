@@ -7,6 +7,7 @@ import (
 	"github.com/nebisin/api_structure/pkg/response"
 	"net/http"
 	"strings"
+	"time"
 )
 
 func (s *server) handleRegisterUser(w http.ResponseWriter, r *http.Request) {
@@ -50,16 +51,27 @@ func (s *server) handleRegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	tokenRepo := store.NewTokenRepository(s.db)
+	token, err := tokenRepo.New(user.ID, 3*24*time.Hour, store.ScopeActivation)
+	if err != nil {
+		response.ServerErrorResponse(w, r, s.logger, err)
+		return
+	}
+
 	s.background(func() {
-		if err := s.mailer.Send(user.Email, "user_welcome.tmpl", user); err != nil {
+		data := map[string]interface{}{
+			"activationToken": token.Plaintext,
+			"userID": user.ID,
+		}
+		if err := s.mailer.Send(user.Email, "user_welcome.tmpl", data); err != nil {
 			s.logger.WithFields(map[string]interface{}{
 				"request_method": r.Method,
-				"request_url": r.URL.String(),
+				"request_url":    r.URL.String(),
 			}).WithError(err).Error("background email error")
 		}
 	})
 
-	err = response.JSONResponse(w, http.StatusAccepted, response.Envelope{"user": user});
+	err = response.JSONResponse(w, http.StatusAccepted, response.Envelope{"user": user})
 	if err != nil {
 		response.ServerErrorResponse(w, r, s.logger, err)
 	}
