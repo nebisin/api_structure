@@ -61,7 +61,7 @@ func (s *server) handleRegisterUser(w http.ResponseWriter, r *http.Request) {
 	s.background(func() {
 		data := map[string]interface{}{
 			"activationToken": token.Plaintext,
-			"userID": user.ID,
+			"userID":          user.ID,
 		}
 		if err := s.mailer.Send(user.Email, "user_welcome.tmpl", data); err != nil {
 			s.logger.WithFields(map[string]interface{}{
@@ -73,6 +73,58 @@ func (s *server) handleRegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	err = response.JSONResponse(w, http.StatusAccepted, response.Envelope{"user": user})
 	if err != nil {
+		response.ServerErrorResponse(w, r, s.logger, err)
+	}
+}
+
+func (s *server) handleActivateUser(w http.ResponseWriter, r *http.Request) {
+	var input struct {
+		TokenPlainText string `json:"token" validator:"required,max=26"`
+	}
+
+	if err := request.ReadJSON(w, r, &input); err != nil {
+		response.BadRequestResponse(w, err)
+		return
+	}
+
+	if err := request.ValidateInput(&input); err != nil {
+		response.FailedValidationResponse(w, err)
+		return
+	}
+
+	userRepo := store.NewUserRepository(s.db)
+
+	user, err := userRepo.GetForToken(store.ScopeActivation, input.TokenPlainText)
+	if err != nil {
+		switch {
+		case errors.Is(err, store.ErrRecordNotFound):
+			response.FailedValidationResponse(w, map[string]string{"token": "invalid or expired activation token"})
+		default:
+			response.ServerErrorResponse(w, r, s.logger, err)
+		}
+		return
+	}
+
+	user.Activated = true
+
+	if err := userRepo.Update(user); err != nil {
+		switch {
+		case errors.Is(err, store.ErrEditConflict):
+			response.EditConflictResponse(w)
+		default:
+			response.ServerErrorResponse(w, r, s.logger, err)
+		}
+		return
+	}
+
+	tokenRepo := store.NewTokenRepository(s.db)
+
+	if err := tokenRepo.DeleteAllForUser(store.ScopeActivation, user.ID); err != nil {
+		response.ServerErrorResponse(w, r, s.logger, err)
+		return
+	}
+
+	if err := response.JSONResponse(w, http.StatusOK, response.Envelope{"user": user}); err != nil {
 		response.ServerErrorResponse(w, r, s.logger, err)
 	}
 }

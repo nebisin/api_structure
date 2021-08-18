@@ -25,6 +25,7 @@ func (s *server) routes() {
 	s.router.HandleFunc("/v1/posts/{id}", s.handleDeletePost).Methods(http.MethodDelete)
 
 	s.router.HandleFunc("/v1/users", s.handleRegisterUser).Methods(http.MethodPost)
+	s.router.HandleFunc("/v1/users/activated", s.handleActivateUser).Methods(http.MethodPut)
 }
 
 func (s *server) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
