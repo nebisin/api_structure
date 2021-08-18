@@ -2,10 +2,19 @@
 
 {{define "plainBody"}}
 Hi,
+Thanks for signing up for a GoPress account. We're excited to have you on board!
 
-Thanks for signing up for a GoPress account. Your user ID number is {{.ID}}.
+For future reference, your user ID number is {{.userID}}.
 
-GoPress
+Please send a request to the `PUT /v1/users/activated` endpoint with the following JSON body to activate your account:
+
+{"token": "{{.activationToken}}"}
+
+Please note that this is a one-time use token and it will expire in 3 days.
+
+Thanks,
+
+The GoPress Team
 {{end}}
 
 {{define "htmlBody"}}
@@ -16,11 +25,17 @@ GoPress
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
 </head>
 <body>
-    <p>Hi,</p>
-    <p>Thanks for signing up for a GoPress account. We're excited to have you on board!</p>
-    <p>For future reference, your user ID number is {{.ID}}.</p>
-    <p>Thanks,</p>
-    <p>The GoPress Team</p>
+<p>Hi,</p>
+<p>Thanks for signing up for a GoPress account. We're excited to have you on board!</p>
+<p>For future reference, your user ID number is {{.ID}}.</p>
+<p>Please send a request to the <code>PUT /v1/users/activated</code> endpoint with the following JSON body to activate
+    your account:</p>
+<pre><code>
+{"token": "{{.activationToken}}"}
+</code></pre>
+<p>Please note that this is a one-time use token and it will expire in 3 days.</p>
+<p>Thanks,</p>
+<p>The GoPress Team</p>
 </body>
 </html>
 {{end}}
