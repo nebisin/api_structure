@@ -16,7 +16,7 @@ func ErrorResponse(w http.ResponseWriter, status int, message interface{}) {
 func ServerErrorResponse(w http.ResponseWriter, r *http.Request, log *logrus.Logger, err error) {
 	log.WithFields(map[string]interface{}{
 		"request_method": r.Method,
-		"request_url": r.URL.String(),
+		"request_url":    r.URL.String(),
 	}).WithError(err).Error("server error response")
 
 	message := "something went wrong"
@@ -52,4 +52,9 @@ func EditConflictResponse(w http.ResponseWriter) {
 func RateLimitExceededResponse(w http.ResponseWriter, r *http.Request) {
 	message := "rate limit exceeded"
 	ErrorResponse(w, http.StatusTooManyRequests, message)
+}
+
+func InvalidCredentialsResponse(w http.ResponseWriter, r *http.Request) {
+	message := "invalid authentication credentials"
+	ErrorResponse(w, http.StatusUnauthorized, message)
 }

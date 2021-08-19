@@ -65,6 +65,7 @@ WHERE email = $1`
 	err := r.DB.QueryRowContext(ctx, query, email).Scan(
 		&user.ID,
 		&user.CreatedAt,
+		&user.Name,
 		&user.Email,
 		&user.Password.Hash,
 		&user.Activated,
