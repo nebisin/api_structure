@@ -25,6 +25,7 @@ func (s *server) recoverPanic(next http.Handler) http.Handler {
 	})
 }
 
+// rateLimit is the rate limiter middleware
 func (s *server) rateLimit(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		ip, _, err := net.SplitHostPort(r.RemoteAddr)
@@ -52,6 +53,7 @@ func (s *server) rateLimit(next http.Handler) http.Handler {
 	})
 }
 
+// authenticate is the authentication middleware
 func (s *server) authenticate(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Add("Vary", "Authorization")
@@ -92,4 +94,32 @@ func (s *server) authenticate(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+func (s *server) requireAuthenticatedUser(next http.HandlerFunc) http.HandlerFunc {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := s.contextGetUser(r)
+
+		if user.IsAnonymous() {
+			response.AuthenticationRequiredResponse(w, r)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+}
+
+func (s *server) requireActivatedUser(next http.HandlerFunc) http.HandlerFunc {
+	fn := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		user := s.contextGetUser(r)
+
+		if !user.Activated {
+			response.InactiveAccountResponse(w, r)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
+
+	return s.requireAuthenticatedUser(fn)
 }

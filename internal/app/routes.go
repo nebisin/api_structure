@@ -11,19 +11,20 @@ func (s *server) routes() {
 
 	s.router = mux.NewRouter()
 
-	s.router.Use(s.rateLimit)
 	s.router.Use(s.recoverPanic)
+	s.router.Use(s.rateLimit)
 	s.router.Use(s.authenticate)
 
 	s.router.NotFoundHandler = http.HandlerFunc(response.NotFoundResponse)
 	s.router.MethodNotAllowedHandler = http.HandlerFunc(response.MethodNotAllowedResponse)
 
 	s.router.HandleFunc("/v1/healthcheck", s.handleHealthCheck)
-	s.router.HandleFunc("/v1/posts", s.handleCreatePost).Methods(http.MethodPost)
-	s.router.HandleFunc("/v1/posts/{id}", s.handleShowPost).Methods(http.MethodGet)
-	s.router.HandleFunc("/v1/posts", s.handleListPosts).Methods(http.MethodGet)
-	s.router.HandleFunc("/v1/posts/{id}", s.handleUpdatePost).Methods(http.MethodPatch)
-	s.router.HandleFunc("/v1/posts/{id}", s.handleDeletePost).Methods(http.MethodDelete)
+
+	s.router.HandleFunc("/v1/posts", s.requireActivatedUser(s.handleCreatePost)).Methods(http.MethodPost)
+	s.router.HandleFunc("/v1/posts/{id}", s.requireActivatedUser(s.handleShowPost)).Methods(http.MethodGet)
+	s.router.HandleFunc("/v1/posts", s.requireActivatedUser(s.handleListPosts)).Methods(http.MethodGet)
+	s.router.HandleFunc("/v1/posts/{id}", s.requireActivatedUser(s.handleUpdatePost)).Methods(http.MethodPatch)
+	s.router.HandleFunc("/v1/posts/{id}", s.requireActivatedUser(s.handleDeletePost)).Methods(http.MethodDelete)
 
 	s.router.HandleFunc("/v1/users", s.handleRegisterUser).Methods(http.MethodPost)
 	s.router.HandleFunc("/v1/users/activated", s.handleActivateUser).Methods(http.MethodPut)
