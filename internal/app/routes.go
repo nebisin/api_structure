@@ -13,6 +13,7 @@ func (s *server) routes() {
 
 	s.router.Use(s.rateLimit)
 	s.router.Use(s.recoverPanic)
+	s.router.Use(s.authenticate)
 
 	s.router.NotFoundHandler = http.HandlerFunc(response.NotFoundResponse)
 	s.router.MethodNotAllowedHandler = http.HandlerFunc(response.MethodNotAllowedResponse)
