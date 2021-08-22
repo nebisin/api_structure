@@ -49,6 +49,12 @@ func (s *server) handleRegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = s.models.Permissions.AddForUser(user.ID, "posts:read")
+	if err != nil {
+		response.ServerErrorResponse(w, r, s.logger, err)
+		return
+	}
+
 	token, err := s.models.Tokens.New(user.ID, 3*24*time.Hour, store.ScopeActivation)
 	if err != nil {
 		response.ServerErrorResponse(w, r, s.logger, err)

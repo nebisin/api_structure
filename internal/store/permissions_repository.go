@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"github.com/lib/pq"
 	"time"
 )
 
@@ -58,4 +59,16 @@ WHERE users.id = $1`
 	}
 
 	return permissions, nil
+}
+
+// AddForUser adds the provided permission codes for a specific user.
+func (r *permissionRepository) AddForUser(userID int64, codes ...string) error {
+	query := `INSERT INTO users_permissions
+SELECT $1, permissions.id FROM permissions WHERE permissions.code = ANY($2)`
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*5)
+	defer cancel()
+
+	_, err := r.DB.ExecContext(ctx, query, userID, pq.Array(codes))
+	return err
 }
