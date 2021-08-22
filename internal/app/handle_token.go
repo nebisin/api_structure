@@ -25,9 +25,7 @@ func (s *server) handleCreateAuthenticationToken(w http.ResponseWriter, r *http.
 		return
 	}
 
-	userRepo := store.NewUserRepository(s.db)
-
-	user, err := userRepo.GetByEmail(input.Email)
+	user, err := s.models.Users.GetByEmail(input.Email)
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrRecordNotFound):
@@ -49,8 +47,7 @@ func (s *server) handleCreateAuthenticationToken(w http.ResponseWriter, r *http.
 		return
 	}
 
-	tokenRepo := store.NewTokenRepository(s.db)
-	token, err := tokenRepo.New(user.ID, 24*time.Hour, store.ScopeAuthentication)
+	token, err := s.models.Tokens.New(user.ID, 24*time.Hour, store.ScopeAuthentication)
 	if err != nil {
 		response.ServerErrorResponse(w, r, s.logger, err)
 		return

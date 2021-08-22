@@ -6,6 +6,8 @@ import (
 	"net/http"
 )
 
+// ErrorResponse is the default response function for errors. It takes http.ResponseWriter,
+// status code as an int and message interface.
 func ErrorResponse(w http.ResponseWriter, status int, message interface{}) {
 	err := JSONResponse(w, status, Envelope{"error": message})
 	if err != nil {
@@ -13,6 +15,8 @@ func ErrorResponse(w http.ResponseWriter, status int, message interface{}) {
 	}
 }
 
+// ServerErrorResponse function is for sending the 500 internal server error to the client.
+// ServerErrorResponse logs the request method, request url with the error message.
 func ServerErrorResponse(w http.ResponseWriter, r *http.Request, log *logrus.Logger, err error) {
 	log.WithFields(map[string]interface{}{
 		"request_method": r.Method,

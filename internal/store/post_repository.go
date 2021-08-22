@@ -22,12 +22,6 @@ type postRepository struct {
 	DB *sql.DB
 }
 
-func NewPostRepository(db *sql.DB) *postRepository {
-	return &postRepository{
-		DB: db,
-	}
-}
-
 func (r *postRepository) Insert(post *Post) error {
 	query := `INSERT INTO posts (title, body, tags) 
 VALUES ($1, $2, $3) 

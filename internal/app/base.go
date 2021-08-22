@@ -8,6 +8,7 @@ import (
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/nebisin/api_structure/internal/mailer"
+	"github.com/nebisin/api_structure/internal/store"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
 	"os"
@@ -41,6 +42,7 @@ type server struct {
 	}
 	mailer mailer.Mailer
 	wg     sync.WaitGroup
+	models store.Models
 }
 
 type client struct {

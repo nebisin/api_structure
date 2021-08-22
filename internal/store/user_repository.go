@@ -29,12 +29,6 @@ type userRepository struct {
 	DB *sql.DB
 }
 
-func NewUserRepository(db *sql.DB) *userRepository {
-	return &userRepository{
-		DB: db,
-	}
-}
-
 func (r *userRepository) Insert(user *User) error {
 	query := `INSERT INTO users (name, email, password_hash, activated)
 VALUES ($1, $2, $3, $4)
