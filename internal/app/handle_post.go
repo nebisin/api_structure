@@ -33,9 +33,7 @@ func (s *server) handleCreatePost(w http.ResponseWriter, r *http.Request) {
 		Tags:  input.Tags,
 	}
 
-	repo := store.NewPostRepository(s.db)
-
-	err := repo.Insert(&post)
+	err := s.models.Posts.Insert(&post)
 	if err != nil {
 		response.ServerErrorResponse(w, r, s.logger, err)
 		return
@@ -54,9 +52,7 @@ func (s *server) handleShowPost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repo := store.NewPostRepository(s.db)
-
-	post, err := repo.Get(id)
+	post, err := s.models.Posts.Get(id)
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrRecordNotFound):
@@ -80,9 +76,7 @@ func (s *server) handleUpdatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repo := store.NewPostRepository(s.db)
-
-	post, err := repo.Get(id)
+	post, err := s.models.Posts.Get(id)
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrRecordNotFound):
@@ -126,7 +120,7 @@ func (s *server) handleUpdatePost(w http.ResponseWriter, r *http.Request) {
 		post.Tags = input.Tags
 	}
 
-	if err := repo.Update(post); err != nil {
+	if err := s.models.Posts.Update(post); err != nil {
 		switch {
 		case errors.Is(err, store.ErrEditConflict):
 			response.EditConflictResponse(w)
@@ -149,9 +143,7 @@ func (s *server) handleDeletePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repo := store.NewPostRepository(s.db)
-
-	if err := repo.Delete(id); err != nil {
+	if err := s.models.Posts.Delete(id); err != nil {
 		switch {
 		case errors.Is(err, store.ErrRecordNotFound):
 			response.NotFoundResponse(w, r)
@@ -190,9 +182,7 @@ func (s *server) handleListPosts(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repo := store.NewPostRepository(s.db)
-
-	posts, err := repo.GetAll(input.Title, input.Tags, input.Filters)
+	posts, err := s.models.Posts.GetAll(input.Title, input.Tags, input.Filters)
 	if err != nil {
 		response.ServerErrorResponse(w, r, s.logger, err)
 		return

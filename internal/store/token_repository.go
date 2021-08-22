@@ -10,15 +10,16 @@ import (
 )
 
 const (
-	ScopeActivation = "activation"
+	ScopeActivation     = "activation"
+	ScopeAuthentication = "authentication"
 )
 
 type Token struct {
-	Plaintext string `validator:"required,max=26"`
-	Hash      []byte
-	UserID    int64
-	Expiry    time.Time
-	Scope     string
+	Plaintext string    `json:"token"`
+	Hash      []byte    `json:"-"`
+	UserID    int64     `json:"-"`
+	Expiry    time.Time `json:"expiry"`
+	Scope     string    `json:"-"`
 }
 
 func generateToken(userID int64, ttl time.Duration, scope string) (*Token, error) {
@@ -46,12 +47,6 @@ func generateToken(userID int64, ttl time.Duration, scope string) (*Token, error
 
 type tokenRepository struct {
 	DB *sql.DB
-}
-
-func NewTokenRepository(db *sql.DB) *tokenRepository {
-	return &tokenRepository{
-		DB: db,
-	}
 }
 
 func (r *tokenRepository) New(userID int64, ttl time.Duration, scope string) (*Token, error) {

@@ -9,6 +9,8 @@ import (
 	"time"
 )
 
+var AnonymousUser = &User{}
+
 type User struct {
 	ID        int64         `json:"id"`
 	CreatedAt time.Time     `json:"created_at"`
@@ -19,14 +21,12 @@ type User struct {
 	Version   int           `json:"-"`
 }
 
-type userRepository struct {
-	DB *sql.DB
+func (u *User) IsAnonymous() bool {
+	return u == AnonymousUser
 }
 
-func NewUserRepository(db *sql.DB) *userRepository {
-	return &userRepository{
-		DB: db,
-	}
+type userRepository struct {
+	DB *sql.DB
 }
 
 func (r *userRepository) Insert(user *User) error {
@@ -65,6 +65,7 @@ WHERE email = $1`
 	err := r.DB.QueryRowContext(ctx, query, email).Scan(
 		&user.ID,
 		&user.CreatedAt,
+		&user.Name,
 		&user.Email,
 		&user.Password.Hash,
 		&user.Activated,

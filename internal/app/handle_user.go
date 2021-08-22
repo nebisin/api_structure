@@ -38,9 +38,7 @@ func (s *server) handleRegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	repo := store.NewUserRepository(s.db)
-
-	if err := repo.Insert(user); err != nil {
+	if err := s.models.Users.Insert(user); err != nil {
 		switch {
 		case errors.Is(err, store.ErrDuplicateEmail):
 			errs := map[string]string{"email": "is already exist"}
@@ -51,8 +49,13 @@ func (s *server) handleRegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenRepo := store.NewTokenRepository(s.db)
-	token, err := tokenRepo.New(user.ID, 3*24*time.Hour, store.ScopeActivation)
+	err = s.models.Permissions.AddForUser(user.ID, "posts:read")
+	if err != nil {
+		response.ServerErrorResponse(w, r, s.logger, err)
+		return
+	}
+
+	token, err := s.models.Tokens.New(user.ID, 3*24*time.Hour, store.ScopeActivation)
 	if err != nil {
 		response.ServerErrorResponse(w, r, s.logger, err)
 		return
@@ -92,9 +95,7 @@ func (s *server) handleActivateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userRepo := store.NewUserRepository(s.db)
-
-	user, err := userRepo.GetForToken(store.ScopeActivation, input.TokenPlainText)
+	user, err := s.models.Users.GetForToken(store.ScopeActivation, input.TokenPlainText)
 	if err != nil {
 		switch {
 		case errors.Is(err, store.ErrRecordNotFound):
@@ -107,7 +108,7 @@ func (s *server) handleActivateUser(w http.ResponseWriter, r *http.Request) {
 
 	user.Activated = true
 
-	if err := userRepo.Update(user); err != nil {
+	if err := s.models.Users.Update(user); err != nil {
 		switch {
 		case errors.Is(err, store.ErrEditConflict):
 			response.EditConflictResponse(w)
@@ -117,9 +118,7 @@ func (s *server) handleActivateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenRepo := store.NewTokenRepository(s.db)
-
-	if err := tokenRepo.DeleteAllForUser(store.ScopeActivation, user.ID); err != nil {
+	if err := s.models.Tokens.DeleteAllForUser(store.ScopeActivation, user.ID); err != nil {
 		response.ServerErrorResponse(w, r, s.logger, err)
 		return
 	}

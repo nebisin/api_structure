@@ -2,6 +2,7 @@ package app
 
 import "fmt"
 
+// Gracefully shutdown for background tasks
 func (s *server) background(fn func()) {
 	s.wg.Add(1)
 
