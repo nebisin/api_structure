@@ -78,8 +78,7 @@ func (s *server) authenticate(next http.Handler) http.Handler {
 			return
 		}
 
-		userRepo := store.NewUserRepository(s.db)
-		user, err := userRepo.GetForToken(store.ScopeAuthentication, token)
+		user, err := s.models.Users.GetForToken(store.ScopeAuthentication, token)
 		if err != nil {
 			switch {
 			case errors.Is(err, store.ErrRecordNotFound):
@@ -122,4 +121,25 @@ func (s *server) requireActivatedUser(next http.HandlerFunc) http.HandlerFunc {
 	})
 
 	return s.requireAuthenticatedUser(fn)
+}
+
+func (s *server) requirePermission(code string, next http.HandlerFunc) http.HandlerFunc {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		user := s.contextGetUser(r)
+
+		permissions, err := s.models.Permissions.GetAllForUser(user.ID)
+		if err != nil {
+			response.ServerErrorResponse(w, r, s.logger, err)
+			return
+		}
+
+		if !permissions.Include(code) {
+			response.NotPermittedResponse(w, r)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	}
+
+	return s.requireActivatedUser(fn)
 }

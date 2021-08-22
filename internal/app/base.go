@@ -75,6 +75,8 @@ func (s *server) Run() {
 	defer db.Close()
 	s.db = db
 
+	s.models = store.NewModels(db)
+
 	if err := s.serve(); err != nil {
 		s.logger.WithError(err).Fatal("an error occurred while starting the server")
 	}

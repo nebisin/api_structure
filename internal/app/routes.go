@@ -20,11 +20,11 @@ func (s *server) routes() {
 
 	s.router.HandleFunc("/v1/healthcheck", s.handleHealthCheck)
 
-	s.router.HandleFunc("/v1/posts", s.requireActivatedUser(s.handleCreatePost)).Methods(http.MethodPost)
-	s.router.HandleFunc("/v1/posts/{id}", s.requireActivatedUser(s.handleShowPost)).Methods(http.MethodGet)
-	s.router.HandleFunc("/v1/posts", s.requireActivatedUser(s.handleListPosts)).Methods(http.MethodGet)
-	s.router.HandleFunc("/v1/posts/{id}", s.requireActivatedUser(s.handleUpdatePost)).Methods(http.MethodPatch)
-	s.router.HandleFunc("/v1/posts/{id}", s.requireActivatedUser(s.handleDeletePost)).Methods(http.MethodDelete)
+	s.router.HandleFunc("/v1/posts", s.requirePermission("posts:write", s.handleCreatePost)).Methods(http.MethodPost)
+	s.router.HandleFunc("/v1/posts/{id}", s.requirePermission("posts:read", s.handleShowPost)).Methods(http.MethodGet)
+	s.router.HandleFunc("/v1/posts", s.requirePermission("posts:read", s.handleListPosts)).Methods(http.MethodGet)
+	s.router.HandleFunc("/v1/posts/{id}", s.requirePermission("posts:write", s.handleUpdatePost)).Methods(http.MethodPatch)
+	s.router.HandleFunc("/v1/posts/{id}", s.requirePermission("posts:write", s.handleDeletePost)).Methods(http.MethodDelete)
 
 	s.router.HandleFunc("/v1/users", s.handleRegisterUser).Methods(http.MethodPost)
 	s.router.HandleFunc("/v1/users/activated", s.handleActivateUser).Methods(http.MethodPut)

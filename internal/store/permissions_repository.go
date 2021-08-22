@@ -28,11 +28,10 @@ type permissionRepository struct {
 // GetAllForUser method returns all permission codes for a specific user
 // in a Permissions slice.
 func (r *permissionRepository) GetAllForUser(userID int64) (Permissions, error) {
-	query := `
-SELECT permissions.code
+	query := `SELECT permissions.code
 FROM permissions
 INNER JOIN users_permissions ON users_permissions.permission_id = permissions.id
-INNER JOIN users ON users_permissions.user_id = user.id
+INNER JOIN users ON users_permissions.user_id = users.id
 WHERE users.id = $1`
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
