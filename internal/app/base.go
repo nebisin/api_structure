@@ -19,7 +19,7 @@ import (
 const version = "1.0.0"
 
 type config struct {
-	port int
+	port string
 	env  string
 	dsn  string
 	smtp struct {
@@ -91,7 +91,7 @@ func (s *server) getConfig() {
 		s.logger.WithError(err).Fatal("something went wrong while getting env")
 	}
 
-	flag.IntVar(&cfg.port, "port", 3000, "API server port")
+	flag.StringVar(&cfg.port, "port", os.Getenv("PORT"), "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 
 	flag.StringVar(&cfg.dsn, "db-dsn", os.Getenv("DB_URI"), "PostgreSQL DSN")
