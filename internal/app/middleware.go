@@ -167,6 +167,11 @@ func (s *server) enableCORS(next http.Handler) http.Handler {
 			}
 		}
 
+		if r.Method == http.MethodOptions {
+			response.MethodNotAllowedResponse(w, r)
+			return
+		}
+
 		next.ServeHTTP(w, r)
 	})
 }
