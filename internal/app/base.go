@@ -12,6 +12,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"golang.org/x/time/rate"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -19,7 +20,7 @@ import (
 const version = "1.0.0"
 
 type config struct {
-	port int
+	port string
 	env  string
 	dsn  string
 	smtp struct {
@@ -28,6 +29,9 @@ type config struct {
 		username string
 		password string
 		sender   string
+	}
+	cors struct{
+		trustedOrigins []string
 	}
 }
 
@@ -91,7 +95,7 @@ func (s *server) getConfig() {
 		s.logger.WithError(err).Fatal("something went wrong while getting env")
 	}
 
-	flag.IntVar(&cfg.port, "port", 3000, "API server port")
+	flag.StringVar(&cfg.port, "port", os.Getenv("PORT"), "API server port")
 	flag.StringVar(&cfg.env, "env", "development", "Environment (development|staging|production)")
 
 	flag.StringVar(&cfg.dsn, "db-dsn", os.Getenv("DB_URI"), "PostgreSQL DSN")
@@ -101,6 +105,11 @@ func (s *server) getConfig() {
 	flag.StringVar(&cfg.smtp.username, "smtp-username", os.Getenv("SMTP_USERNAME"), "SMTP username")
 	flag.StringVar(&cfg.smtp.password, "smtp-password", os.Getenv("SMTP_PASSWORD"), "SMTP password")
 	flag.StringVar(&cfg.smtp.sender, "smtp-sender", os.Getenv("SMTP_SENDER"), "SMTP sender")
+
+	flag.Func("cors-trusted-origins", "Trusted CORS origins (space seperated)", func(val string) error {
+		cfg.cors.trustedOrigins = strings.Fields(val)
+		return nil
+	})
 
 	flag.Parse()
 

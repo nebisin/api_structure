@@ -12,24 +12,30 @@ func (s *server) routes() {
 	s.router = mux.NewRouter()
 
 	s.router.Use(s.recoverPanic)
+	s.router.Use(s.enableCORS)
 	s.router.Use(s.rateLimit)
 	s.router.Use(s.authenticate)
 
 	s.router.NotFoundHandler = http.HandlerFunc(response.NotFoundResponse)
 	s.router.MethodNotAllowedHandler = http.HandlerFunc(response.MethodNotAllowedResponse)
 
-	s.router.HandleFunc("/v1/healthcheck", s.handleHealthCheck)
+	s.router.Methods("OPTIONS")
 
-	s.router.HandleFunc("/v1/posts", s.requirePermission("posts:write", s.handleCreatePost)).Methods(http.MethodPost)
-	s.router.HandleFunc("/v1/posts/{id}", s.requirePermission("posts:read", s.handleShowPost)).Methods(http.MethodGet)
-	s.router.HandleFunc("/v1/posts", s.requirePermission("posts:read", s.handleListPosts)).Methods(http.MethodGet)
-	s.router.HandleFunc("/v1/posts/{id}", s.requirePermission("posts:write", s.handleUpdatePost)).Methods(http.MethodPatch)
-	s.router.HandleFunc("/v1/posts/{id}", s.requirePermission("posts:write", s.handleDeletePost)).Methods(http.MethodDelete)
+	apiV1 := s.router.PathPrefix("/api/v1").Subrouter()
 
-	s.router.HandleFunc("/v1/users", s.handleRegisterUser).Methods(http.MethodPost)
-	s.router.HandleFunc("/v1/users/activated", s.handleActivateUser).Methods(http.MethodPut)
+	apiV1.HandleFunc("/healthcheck", s.handleHealthCheck)
 
-	s.router.HandleFunc("/v1/tokens/authentication", s.handleCreateAuthenticationToken).Methods(http.MethodPost)
+	apiV1.HandleFunc("/posts", s.requirePermission("posts:write", s.handleCreatePost)).Methods(http.MethodPost)
+	apiV1.HandleFunc("/posts/{id}", s.requirePermission("posts:read", s.handleShowPost)).Methods(http.MethodGet)
+	apiV1.HandleFunc("/posts", s.requirePermission("posts:read", s.handleListPosts)).Methods(http.MethodGet)
+	apiV1.HandleFunc("/posts/{id}", s.requirePermission("posts:write", s.handleUpdatePost)).Methods(http.MethodPatch)
+	apiV1.HandleFunc("/posts/{id}", s.requirePermission("posts:write", s.handleDeletePost)).Methods(http.MethodDelete)
+
+	apiV1.HandleFunc("/users", s.handleRegisterUser).Methods(http.MethodPost)
+	apiV1.HandleFunc("/users/activated", s.handleActivateUser).Methods(http.MethodPut)
+
+	apiV1.HandleFunc("/tokens/authentication", s.handleCreateAuthenticationToken).Methods(http.MethodPost)
+
 }
 
 func (s *server) handleHealthCheck(w http.ResponseWriter, r *http.Request) {

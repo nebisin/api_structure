@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"errors"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,7 +12,7 @@ import (
 
 func (s *server) serve() error {
 	srv := &http.Server{
-		Addr:         fmt.Sprintf(":%d", s.config.port),
+		Addr:         s.config.port,
 		Handler:      s.router,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
