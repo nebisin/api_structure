@@ -22,6 +22,6 @@ COPY start.sh .
 COPY ./migrations ./migrations
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
 
-EXPOSE 8080
+EXPOSE 4000
 CMD [ "/app/main" ]
 ENTRYPOINT [ "/app/start.sh" ]

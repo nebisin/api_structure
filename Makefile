@@ -23,6 +23,6 @@ migratedown1:
 	migrate -path ./migration -database "postgresql://postgres:mysecretpassword@localhost:5432/development?sslmode=disable" -verbose down 1
 
 server:
-	go run ./cmd/api/main.go
+	go run ./cmd/api/main.go -cors-trusted-origins="http://localhost:3000"
 
 .PHONY: postgres createdb migrateup migratedown migrateup1 migratedown1 dropdb test server

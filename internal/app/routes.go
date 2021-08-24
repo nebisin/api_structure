@@ -19,6 +19,8 @@ func (s *server) routes() {
 	s.router.NotFoundHandler = http.HandlerFunc(response.NotFoundResponse)
 	s.router.MethodNotAllowedHandler = http.HandlerFunc(response.MethodNotAllowedResponse)
 
+	s.router.Methods("OPTIONS")
+
 	apiV1 := s.router.PathPrefix("/api/v1").Subrouter()
 
 	apiV1.HandleFunc("/healthcheck", s.handleHealthCheck)
@@ -33,6 +35,7 @@ func (s *server) routes() {
 	apiV1.HandleFunc("/users/activated", s.handleActivateUser).Methods(http.MethodPut)
 
 	apiV1.HandleFunc("/tokens/authentication", s.handleCreateAuthenticationToken).Methods(http.MethodPost)
+
 }
 
 func (s *server) handleHealthCheck(w http.ResponseWriter, r *http.Request) {
